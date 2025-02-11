@@ -9,6 +9,8 @@ import java.util.Set;
 
 /**
  * Implementation of a Deterministic Finite Automata (DFA).
+ * 
+ * @author Chase Stombaugh
  */
 public class DFA implements DFAInterface {
     private Set<DFAState> states;
@@ -34,7 +36,11 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean addTransition(String fromState, String toState, char onSymb) {
-        return false;
+        if (!alphabet.contains(onSymb) || getState(fromState) == null || getState(toState) == null) {
+            return false;
+        }
+        transitions.get(fromState).put(onSymb, toState);
+        return true;
     }
 
     /**
@@ -42,8 +48,40 @@ public class DFA implements DFAInterface {
      */
     @Override
     public DFA swap(char symb1, char symb2) {
-        return null;
+        DFA newDFA = new DFA();
+
+        // Copy all states
+        for (DFAState state : states) {
+            newDFA.addState(state.getName());
+        }
+
+        // Copy start and final states
+        newDFA.setStart(startState.getName());
+        for (DFAState state : finalStates) {
+            newDFA.setFinal(state.getName());
+        }
+
+        // Copy and swap transitions
+        for (String state : transitions.keySet()) {
+            for (Map.Entry<Character, String> entry : transitions.get(state).entrySet()) {
+                char symbol = entry.getKey();
+                String nextState = entry.getValue();
+
+                // Swap the symbols
+                if (symbol == symb1) {
+                    symbol = symb2;
+                } else if (symbol == symb2) {
+                    symbol = symb1;
+                }
+
+                // Add the transition with the swapped symbol
+                newDFA.addTransition(state, nextState, symbol);
+            }
+        }
+
+        return newDFA;
     }
+
 
     /**
      * Adds a new state to the DFA. 
@@ -54,7 +92,7 @@ public class DFA implements DFAInterface {
     @Override
     public boolean addState(String name) {
         if (getState(name) != null) {
-        return false;
+            return false;
         }
         DFAState newState = new DFAState(name);
         states.add(newState);
@@ -70,11 +108,12 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean setFinal(String name) {
-        DFAState state = getState(name);
+        State state = getState(name); 
         if (state == null) return false;
-        finalStates.add(state);
+        finalStates.add((DFAState) state);
         return true;
     }
+
 
     /**
      * Sets the start state of the DFA.
@@ -84,9 +123,9 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean setStart(String name) {
-        DFAState state = getState(name);
+        State state = getState(name);
         if (state == null) return false;
-        this.startState = state;
+        this.startState = (DFAState) state;
         return true;
     }
 
@@ -105,15 +144,28 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean accepts(String s) {
-        return false;
+        if (startState == null) return false; // No start state means no valid transitions
+
+        DFAState currentState = startState; // Start from the initial state
+        for (char c : s.toCharArray()) {
+            if (!alphabet.contains(c)) return false; // Reject if character is not in Sigma
+            if (!transitions.containsKey(currentState.getName()) || 
+                !transitions.get(currentState.getName()).containsKey(c)) {
+                return false; // Reject if no transition exists
+            }
+            // Move to the next state (cast is required)
+            currentState = (DFAState) getState(transitions.get(currentState.getName()).get(c));
+        }
+        return finalStates.contains(currentState); // Correct final state check
     }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     public Set<Character> getSigma() {
-        return Set.of();
+        return new LinkedHashSet<>(alphabet);
     }
 
     /**
@@ -121,6 +173,11 @@ public class DFA implements DFAInterface {
      */
     @Override
     public State getState(String name) {
+        for (DFAState state : states) {
+            if (state.getName().equals(name)) {
+                return state;
+            }
+        }
         return null;
     }
 
@@ -129,7 +186,7 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean isFinal(String name) {
-        return false;
+        return finalStates.contains(getState(name));
     }
 
     /**
@@ -137,7 +194,7 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean isStart(String name) {
-        return false;
+        return startState != null && startState.getName().equals(name);
     }
 
     /**
@@ -145,6 +202,49 @@ public class DFA implements DFAInterface {
      */
     @Override
     public String toString() {
-        return "";
+        StringBuilder sb = new StringBuilder();
+
+        // Print states in the order they were added
+        sb.append("Q = { ");
+        for (DFAState state : states) {
+            sb.append(state.getName()).append(" ");
+        }
+        sb.append("}\n");
+
+        // Print Sigma (Alphabet) in the order they were added
+        sb.append("Sigma = { ");
+        for (char symbol : alphabet) {
+            sb.append(symbol).append(" ");
+        }
+        sb.append("}\n");
+
+        // Print transition table
+        sb.append("delta =\n\t");
+        for (char symbol : alphabet) {
+            sb.append(symbol).append("\t");
+        }
+        sb.append("\n");
+
+        for (DFAState state : states) {
+            sb.append(state.getName()).append("\t");
+            for (char symbol : alphabet) {
+                String nextState = transitions.get(state.getName()).get(symbol);
+                sb.append((nextState != null ? nextState : "-")).append("\t");
+            }
+            sb.append("\n");
+        }
+
+        // Print start state
+        sb.append("q0 = ").append(startState != null ? startState.getName() : "-").append("\n");
+
+        // Print final states
+        sb.append("F = { ");
+        for (DFAState state : finalStates) {
+            sb.append(state.getName()).append(" ");
+        }
+        sb.append("}");
+
+        return sb.toString();
     }
+
 }
