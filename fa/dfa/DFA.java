@@ -2,24 +2,21 @@ package fa.dfa;
 
 import fa.State;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * Implementation of a Deterministic Finite Automata (DFA).
  * 
- * @author Chase Stombaugh
+ * @author Chase Stombaugh, Jayce Lowry
  */
 public class DFA implements DFAInterface {
-    private Set<DFAState> states;
+    private LinkedHashSet<DFAState> states;
     private Set<Character> alphabet;
-    private Map<String, Map<Character, String>> transitions; // (state, symbol) -> next state
     private DFAState startState;
     private Set<DFAState> finalStates;
 
-    /*
+    /**
      * Constructor for a new DFA, Initializes the alphabet, set of states, start state, final states,
      * and the transition map. The start state is set to null to start. 
      */
@@ -28,7 +25,6 @@ public class DFA implements DFAInterface {
         this.states = new LinkedHashSet<>();
         this.startState = null;
         this.finalStates = new LinkedHashSet<>();
-        this.transitions = new HashMap<>();
     }
 
     /**
@@ -36,10 +32,13 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean addTransition(String fromState, String toState, char onSymb) {
-        if (!alphabet.contains(onSymb) || getState(fromState) == null || getState(toState) == null) {
+        DFAState from = (DFAState) getState(fromState);
+        DFAState to = (DFAState) getState(toState);
+
+        if (!alphabet.contains(onSymb) || from == null ||to == null) {
             return false;
         }
-        transitions.get(fromState).put(onSymb, toState);
+        from.setTransition(to, onSymb);
         return true;
     }
 
@@ -48,11 +47,19 @@ public class DFA implements DFAInterface {
      */
     @Override
     public DFA swap(char symb1, char symb2) {
+        // Don't create a copy if the symbols aren't in the alphabet
+        if (!alphabet.contains(symb1) || !alphabet.contains(symb2)) {
+            return null;
+        }
         DFA newDFA = new DFA();
+
+        // Copy alphabet
+        newDFA.alphabet.addAll(alphabet);
 
         // Copy all states
         for (DFAState state : states) {
-            newDFA.addState(state.getName());
+            DFAState copy = new DFAState(state.getName());
+            newDFA.states.add(copy);
         }
 
         // Copy start and final states
@@ -61,22 +68,19 @@ public class DFA implements DFAInterface {
             newDFA.setFinal(state.getName());
         }
 
-        // Copy and swap transitions
-        for (String state : transitions.keySet()) {
-            for (Map.Entry<Character, String> entry : transitions.get(state).entrySet()) {
-                char symbol = entry.getKey();
-                String nextState = entry.getValue();
+        // Copy Transitions
+        for (DFAState state : states) {
+            for (char symbol : alphabet) {
+                DFAState toState = state.getTransitionState(symbol);
+                if (toState != null) {
+                    DFAState copyState = (DFAState) newDFA.getState(state.getName());
+                    DFAState copyToState = (DFAState) newDFA.getState(toState.getName());
 
-                // Swap the symbols
-                if (symbol == symb1) {
-                    symbol = symb2;
-                } else if (symbol == symb2) {
-                    symbol = symb1;
+                    copyState.setTransition(copyToState, symbol);
                 }
-
-                // Add the transition with the swapped symbol
-                newDFA.addTransition(state, nextState, symbol);
             }
+            // Swap transitions
+            ((DFAState) newDFA.getState(state.getName())).swapTransitions(symb1, symb2);
         }
 
         return newDFA;
@@ -87,7 +91,7 @@ public class DFA implements DFAInterface {
      * Adds a new state to the DFA. 
      * 
      * @param name - The name of the state
-     * @return - True if the state was added successfully, False if the state existed perviously
+     * @return - True if the state was added successfully, False if the state existed previously
      */
     @Override
     public boolean addState(String name) {
@@ -96,7 +100,6 @@ public class DFA implements DFAInterface {
         }
         DFAState newState = new DFAState(name);
         states.add(newState);
-        transitions.put(name, new HashMap<>());
         return true;
     }
 
@@ -145,16 +148,13 @@ public class DFA implements DFAInterface {
     @Override
     public boolean accepts(String s) {
         if (startState == null) return false; // No start state means no valid transitions
-
         DFAState currentState = startState; // Start from the initial state
-        for (char c : s.toCharArray()) {
-            if (!alphabet.contains(c)) return false; // Reject if character is not in Sigma
-            if (!transitions.containsKey(currentState.getName()) || 
-                !transitions.get(currentState.getName()).containsKey(c)) {
-                return false; // Reject if no transition exists
+        for (char symbol : s.toCharArray()) {
+            if (!alphabet.contains(symbol)) return false; // Reject if character is not in Sigma
+            if (currentState == null || currentState.getTransitionState(symbol) == null) {
+                return false;
             }
-            // Move to the next state (cast is required)
-            currentState = (DFAState) getState(transitions.get(currentState.getName()).get(c));
+            currentState = currentState.getTransitionState(symbol);
         }
         return finalStates.contains(currentState); // Correct final state check
     }
@@ -228,7 +228,7 @@ public class DFA implements DFAInterface {
         for (DFAState state : states) {
             sb.append(state.getName()).append("\t");
             for (char symbol : alphabet) {
-                String nextState = transitions.get(state.getName()).get(symbol);
+                String nextState = state.getTransitionState(symbol).getName();
                 sb.append((nextState != null ? nextState : "-")).append("\t");
             }
             sb.append("\n");

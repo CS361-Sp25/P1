@@ -24,13 +24,14 @@ public class DFAState extends State implements Comparable<DFAState> {
 
     /**
      * Sets this DFAState to transition to another
-     * DFAState on a particular symbol.
+     * DFAState on a particular symbol. The transition
+     * is not set if the state to transition to is null.
      *
      * @param toState The state to transition to.
      * @param onSymb The symbol to transition on.
      */
     public void setTransition(DFAState toState, char onSymb) {
-        if (toState == null) {
+        if (toState == null) { // Avoid putting null values
             return;
         }
         transitions.put(onSymb, toState);
@@ -47,6 +48,25 @@ public class DFAState extends State implements Comparable<DFAState> {
      */
     public DFAState getTransitionState(char onSymb) {
         return transitions.get(onSymb);
+    }
+
+    /**
+     * Swaps two transition labels for this DFAState. That is,
+     * transitions to another DFAState on symb1 will be
+     * changed to symb2, and vice versa.
+     *
+     * @param symb1 the first symbol.
+     * @param symb2 the second symbol.
+     */
+    protected void swapTransitions(char symb1, char symb2) {
+        if (!transitions.containsKey(symb1) || !transitions.containsKey(symb2)) {
+            return;
+        }
+        DFAState firstState = getTransitionState(symb1);
+        DFAState secondState = getTransitionState(symb2);
+
+        setTransition(firstState, symb2);
+        setTransition(secondState, symb1);
     }
 
     /**
