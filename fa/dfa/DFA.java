@@ -6,7 +6,22 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Implementation of a Deterministic Finite Automata (DFA).
+ * Implementation of a Deterministic Finite Automata (DFA) that models state transitions based on a given
+ * alphabet in order to recognize a regular language. 
+ * 
+ * A DFA consists of an input set of symbols(alphabet), finite set of states, designated start state, set of 
+ * final states, and a transition function which maps (Q × Σ) → Q. 
+ * 
+ * DFA 5-tuple = (Σ, Q, q0, F, δ)
+ * Σ  - finite set of symbols
+ * Q  - finite set of states
+ * q0 - designated starting state
+ * F  - set of final/accepting states
+ * δ  - transition function (Q × Σ) → Q
+ * 
+ * Features: 
+ *  Defines states, start state, final states. Supports adding symbols and transitions. Simulates DFA execution
+ *  on input strings. Allows for swapping transition labels between two symbols. 
  * 
  * @author Chase Stombaugh, Jayce Lowry
  */
@@ -88,10 +103,7 @@ public class DFA implements DFAInterface {
 
 
     /**
-     * Adds a new state to the DFA. 
-     * 
-     * @param name - The name of the state
-     * @return - True if the state was added successfully, False if the state existed previously
+     * {@inheritDoc}
      */
     @Override
     public boolean addState(String name) {
@@ -104,10 +116,7 @@ public class DFA implements DFAInterface {
     }
 
     /**
-     * Marks a state as a final state in the DFA.
-     * 
-     * @param name -The name of the state to be marked as final.
-     * @return - True if the state was successfully marked as final, false if the state does not exist.
+     * {@inheritDoc}
      */
     @Override
     public boolean setFinal(String name) {
@@ -119,10 +128,7 @@ public class DFA implements DFAInterface {
 
 
     /**
-     * Sets the start state of the DFA.
-     * 
-     * @param name - The name of the state to be set as the start state.
-     * @return - True if the state was successfully set, false if the state does not exist.
+     * {@inheritDoc}
      */
     @Override
     public boolean setStart(String name) {
@@ -133,9 +139,7 @@ public class DFA implements DFAInterface {
     }
 
     /**
-     * Adds a symbol to the DFA's alphabet.
-     * 
-     * @param symbol - The symbol to be added to the alphabet.
+     * {@inheritDoc}
      */
     @Override
     public void addSigma(char symbol) {
