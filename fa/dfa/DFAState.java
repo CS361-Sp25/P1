@@ -5,7 +5,8 @@ import fa.State;
 import java.util.HashMap;
 
 /**
- * Represents a state for a Deterministic Finite Automata (DFA)
+ * Represents a State for a Deterministic Finite Automata (DFA),
+ * and manages transitions to other States.
  *
  * @author Jayce Lowry
  */
