@@ -47,7 +47,7 @@ needing to restructure a little bit and I believe a method needed to be added to
 ## Compiling and Using
 
 ### Compiling 
-To complile the DFA implementation and test cases, navigate to the project's root and run the following command:
+To complile the DFA implementation and test cases on the onyx server, navigate to the project's root and run the following command:
 
 `javac -cp .:/usr/share/java/junit.jar ./test/dfa/DFATest.java`
 
