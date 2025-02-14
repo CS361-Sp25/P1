@@ -78,7 +78,9 @@ public class DFA implements DFAInterface {
         }
 
         // Copy start and final states
-        newDFA.setStart(startState.getName());
+        if (startState != null) {
+            newDFA.setStart(startState.getName());
+        }
         for (DFAState state : finalStates) {
             newDFA.setFinal(state.getName());
         }
@@ -107,7 +109,7 @@ public class DFA implements DFAInterface {
      */
     @Override
     public boolean addState(String name) {
-        if (getState(name) != null) {
+        if (name == null || getState(name) != null) {
             return false;
         }
         DFAState newState = new DFAState(name);
@@ -232,8 +234,8 @@ public class DFA implements DFAInterface {
         for (DFAState state : states) {
             sb.append(state.getName()).append("\t");
             for (char symbol : alphabet) {
-                String nextState = state.getTransitionState(symbol).getName();
-                sb.append((nextState != null ? nextState : "-")).append("\t");
+                DFAState nextState = state.getTransitionState(symbol);
+                sb.append((nextState != null ? nextState.getName() : "-")).append("\t");
             }
             sb.append("\n");
         }
