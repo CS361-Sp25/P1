@@ -26,7 +26,7 @@ import java.util.Set;
  * @author Chase Stombaugh, Jayce Lowry
  */
 public class DFA implements DFAInterface {
-    private LinkedHashSet<DFAState> states;
+    private Set<DFAState> states;
     private Set<Character> alphabet;
     private DFAState startState;
     private Set<DFAState> finalStates;
